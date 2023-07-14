@@ -1,4 +1,4 @@
-import asyncdispatch, jester, strutils, net, httpclient, os, zippy/ziparchives, random, browsers, ws, ws/jester_extra
+import asyncdispatch, jester, strutils, net, os, zippy/ziparchives, random, browsers, ws, ws/jester_extra, puppy
 
 proc getOpenPort(): Port =
   let socket = newSocket()
@@ -10,7 +10,6 @@ proc getOpenPort(): Port =
 
 proc generateRandomString(length: int): string =
     const alphabet = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"
-    var result = ""
     
     for _ in 0 .. length - 1:
         result.add(alphabet[rand(0 .. alphabet.len - 1)])
@@ -19,14 +18,13 @@ proc generateRandomString(length: int): string =
 
 let tempDir = getTempDir()
 var NEPTUNE_URL = "https://github.com/uwu/neptune/archive/refs/heads/master.zip"
-var client = newHttpClient()
 # We'll end up changing this conditionally based on platform.
 var tidalDirectory: string
 case hostOS:
     of "windows":
         tidalDirectory = joinPath(getEnv("localappdata"), "TIDAL")
 
-        for _, path in walkDir(tidalDirectory):
+        for _, path in walkDir(tidalDirectory, true):
           if path.startsWith("app-"):
             tidalDirectory = joinPath(tidalDirectory, path, "resources")
             break
@@ -41,7 +39,7 @@ router myrouter:
     if request.body != "": NEPTUNE_URL = request.body
 
     try:
-      client.downloadFile(NEPTUNE_URL, joinPath(tempDir, "neptune.zip"))
+      writeFile(joinPath(tempDir, "neptune.zip"), fetch(NEPTUNE_URL))
       extractAll(joinPath(tempDir, "neptune.zip"), joinPath(tempDir, "neptune-unzipped"))
       removeFile(joinPath(tempDir, "./neptune.zip"))
     except:
