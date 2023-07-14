@@ -43,9 +43,8 @@
         installButton.disabled = true;
 
         await installNeptune();
-        await showCorrectButton();
-
         alert("neptune is installed. feel free to close this tab whenever you'd like.")
+        await showCorrectButton();
 
         installButton.disabled = false;
       })
@@ -54,9 +53,8 @@
         uninstallButton.disabled = true;
 
         await uninstallNeptune();
-        await showCorrectButton();
-
         alert("neptune is uninstalled. feel free to close this tab whenever you'd like.")
+        await showCorrectButton();
 
         uninstallButton.disabled = false;
       })
