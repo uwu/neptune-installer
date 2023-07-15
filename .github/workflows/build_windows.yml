@@ -20,7 +20,7 @@ jobs:
           repo-token: ${{ secrets.LINK_TOKEN }}
       
       - name: Build with Nimble
-        run: nimble build -d:release --gc:arc --opt:size -Y
+        run: nimble build -d:release --gc:arc --opt:size --app:gui -Y
       
       - name: Publish Artifact
         uses: actions/upload-artifact@v2
