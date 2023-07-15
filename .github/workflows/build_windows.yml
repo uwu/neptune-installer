@@ -1,0 +1,29 @@
+name: Build for Windows
+
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+      
+      - name: Setup Nim
+        uses: jiro4989/setup-nim-action@v1
+        with:
+          nim-version: '1.6.14' # default is 'stable'
+          repo-token: ${{ secrets.LINK_TOKEN }}
+      
+      - name: Build with Nimble
+        run: nimble build -d:release --gc:arc --opt:size -Y
+      
+      - name: Publish Artifact
+        uses: actions/upload-artifact@v2
+        with:
+          name: BuiltArtifact
+          path: neptune_installer.exe
