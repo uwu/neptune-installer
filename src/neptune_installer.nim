@@ -1,4 +1,4 @@
-import asyncdispatch, jester, strutils, net, os, zippy/ziparchives, random, browsers, ws, ws/jester_extra, puppy
+import asyncdispatch, jester, strutils, net, os, zippy/ziparchives, random, browsers, ws, ws/jester_extra, puppy, parseutils
 
 proc getOpenPort(): Port =
   let socket = newSocket()
@@ -22,12 +22,19 @@ var NEPTUNE_URL = "https://github.com/uwu/neptune/archive/refs/heads/master.zip"
 var tidalDirectory: string
 case hostOS:
     of "windows":
+        var currentAppDir = ""
+        var currentParsedVersion = 0
         tidalDirectory = joinPath(getEnv("localappdata"), "TIDAL")
 
         for _, path in walkDir(tidalDirectory, true):
           if path.startsWith("app-"):
-            tidalDirectory = joinPath(tidalDirectory, path, "resources")
-            break
+            var parsedVersion = parseInt(path[4..^1].replace(".", ""))
+
+            if parsedVersion > currentParsedVersion:
+              currentParsedVersion = parsedVersion
+              currentAppDir = path
+        
+        tidalDirectory = joinPath(tidalDirectory, currentAppDir, "resources")
 
     of "macosx":
         tidalDirectory = "/Applications/TIDAL.app/Contents/Resources"
