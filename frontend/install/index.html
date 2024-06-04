@@ -42,8 +42,12 @@
       installButton.addEventListener("click", async (e) => {
         installButton.disabled = true;
 
-        await installNeptune();
+        const succeeded = await installNeptune().then(r => r.ok);
+
+        if (!succeeded) return alert("neptune failed to install! make sure to close TIDAL before installing.")
+        
         alert("neptune is installed. feel free to close this tab whenever you'd like.")
+        
         await showCorrectButton();
 
         installButton.disabled = false;
