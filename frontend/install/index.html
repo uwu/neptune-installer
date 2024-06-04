@@ -19,13 +19,14 @@
 
       const installButton = document.getElementById("install-button");
       const uninstallButton = document.getElementById("uninstall-button");
+      const fetchStatus = async () =>
+        (await (await fetch(server + "status")).text()) == "installed";
 
       installButton.style.display = "none";
       uninstallButton.style.display = "none";
 
       async function showCorrectButton() {
-        const installed =
-          (await (await fetch(server + "status")).text()) == "installed";
+        const installed = await fetchStatus();
 
         if (installed) {
           uninstallButton.style.display = "block";
@@ -35,33 +36,56 @@
           uninstallButton.style.display = "none";
         }
       }
-      
-      const installNeptune = () => fetch(server + "install", { method: "POST", mode: "no-cors" });
-      const uninstallNeptune = () => fetch(server + "uninstall", { method: "POST", mode: "no-cors" });
+
+      const installNeptune = () =>
+        fetch(server + "install", { method: "POST", mode: "no-cors" });
+      const uninstallNeptune = () =>
+        fetch(server + "uninstall", { method: "POST", mode: "no-cors" });
 
       installButton.addEventListener("click", async (e) => {
         installButton.disabled = true;
 
-        const succeeded = await installNeptune().then(r => r.ok);
+        await installNeptune();
 
-        if (!succeeded) return alert("neptune failed to install! make sure to close TIDAL before installing.")
-        
-        alert("neptune is installed. feel free to close this tab whenever you'd like.")
-        
+        const installed = await fetchStatus();
+        if (!installed) {
+          installButton.disabled = false;
+
+          return alert(
+            "neptune failed to install! make sure to close TIDAL before installing."
+          );
+        }
+
+        alert(
+          "neptune is installed. feel free to close this tab whenever you'd like."
+        );
+
         await showCorrectButton();
 
         installButton.disabled = false;
-      })
+      });
 
       uninstallButton.addEventListener("click", async (e) => {
         uninstallButton.disabled = true;
 
         await uninstallNeptune();
-        alert("neptune is uninstalled. feel free to close this tab whenever you'd like.")
+
+        const installed = await fetchStatus();
+        if (installed) {
+          uninstallButton.disabled = false;
+
+          return alert(
+            "neptune failed to uninstall! make sure to close TIDAL before uninstalling."
+          );
+        }
+
+        alert(
+          "neptune is uninstalled. feel free to close this tab whenever you'd like."
+        );
         await showCorrectButton();
 
         uninstallButton.disabled = false;
-      })
+      });
 
       showCorrectButton();
     </script>
@@ -82,7 +106,7 @@
 
       #install-button {
         background-color: #314648;
-        color: #7DFBEE;
+        color: #7dfbee;
       }
 
       #uninstall-button {
@@ -101,17 +125,18 @@
         height: 400px;
         border-radius: 20px;
         font-weight: 500;
-        font-family: Avenir, Montserrat, Corbel, 'URW Gothic', source-sans-pro, sans-serif;
+        font-family: Avenir, Montserrat, Corbel, "URW Gothic", source-sans-pro,
+          sans-serif;
         font-size: 90px;
         cursor: pointer;
       }
 
       button:hover {
-        filter:brightness(1.1)
+        filter: brightness(1.1);
       }
-      
+
       button:active {
-        filter: brightness(0.9)
+        filter: brightness(0.9);
       }
     </style>
   </body>
