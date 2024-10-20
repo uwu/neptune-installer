@@ -1,4 +1,4 @@
-module github.com/uwu/tidal-installer
+module github.com/uwu/neptune-installer
 
 go 1.19
 
