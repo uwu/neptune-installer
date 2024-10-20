@@ -150,6 +150,7 @@ func main() {
 
 		if err := os.Rename(filepath.Join(selectedInstancePath[0], "original.asar"), filepath.Join(selectedInstancePath[0], "app.asar")); err != nil {
 			dialog.Message("Failed to rename original.asar to app.asar!\n%s", err).Error()
+			return
 		}
 
 		showInstall()
