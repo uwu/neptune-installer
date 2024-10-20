@@ -67,7 +67,7 @@ jobs:
               run: CGO_ENABLED=1 GOOS=darwin GOARCH=arm64 go build -o installer-arm64 -v -tags static -ldflags "-s -w"
 
             - name: Lipo ARM
-              run: lipo -create installer-arm64 installer-x86 -hideARM64 -o neptune-installer
+              run: lipo -create installer-arm64 installer-x86 -o neptune-installer
 
             - name: Create .app folder
               run: |
