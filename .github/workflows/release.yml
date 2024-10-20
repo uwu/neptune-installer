@@ -1,0 +1,172 @@
+name: Release
+on:
+    push:
+        tags:
+            - v*
+
+env:
+  FORCE_COLOR: true
+
+jobs:
+    build-linux:
+        runs-on: ubuntu-latest
+
+        steps:
+            - name: Install Go
+              uses: actions/setup-go@v2
+              with:
+                  go-version: "1.19"
+
+            - name: Checkout code
+              uses: actions/checkout@v2
+
+            # - name: Install Linux dependencies
+            #   run: |
+            #       sudo apt update
+            #       sudo apt install -y gtk+-3.0 xorg-dev
+
+            - name: Install Go dependencies
+              run: go get -v
+
+            - name: Build
+              run: CGO_ENABLED=1 GOOS=linux GOARCH=amd64 go build -v -tags static -ldflags "-s -w"
+
+            - name: Update executable
+              run: |
+                  chmod +x neptune-installer
+
+            - name: Upload artifact
+              uses: actions/upload-artifact@v2
+              with:
+                  name: installer-linux
+                  path: neptune-installer
+
+    build-mac:
+        runs-on: macos-latest
+
+        steps:
+            - name: Install Go
+              uses: actions/setup-go@v2
+              with:
+                  go-version: "1.19.4"
+
+            - name: Checkout code
+              uses: actions/checkout@v2
+
+            - name: Install dependencies
+              run: brew install create-dmg
+
+            - name: Install Go dependencies
+              run: go get -v
+
+            - name: Build
+              run: CGO_ENABLED=1 GOOS=darwin GOARCH=amd64 go build -o installer-x86 -v -tags static -ldflags "-s -w"
+
+            - name: Build ARM
+              run: CGO_ENABLED=1 GOOS=darwin GOARCH=arm64 go build -o installer-arm64 -v -tags static -ldflags "-s -w"
+
+            - name: Lipo ARM
+              run: lipo -create installer-arm64 installer-x86 -hideARM64 -o neptune-installer
+
+            - name: Create .app folder
+              run: |
+                go run fyne.io/fyne/v2/cmd/fyne@latest -- package -os darwin -icon assets/mac-icon.icns -name "Install neptune"
+
+            - name: Create DMG folder
+              run: |
+                mkdir -p neptune-installer-dir
+                mv Install\ neptune.app neptune-installer-dir
+
+            - name: Create DMG
+              run: create-dmg --background assets/neptune-bg.png --volname neptune --window-size 500 350 --icon "Install neptune.app" 250 135  "Install neptune.dmg" neptune-installer-dir
+
+            - name: Upload artifact
+              uses: actions/upload-artifact@v2
+              with:
+                  name: installer-macos
+                  path: Install neptune.dmg
+
+    build-windows:
+        runs-on: windows-latest
+
+        steps:
+            - name: Install Go
+              uses: actions/setup-go@v2
+              with:
+                  go-version: "1.19"
+
+            - name: Checkout code
+              uses: actions/checkout@v2
+
+            - name: Setup MSYS2
+              uses: msys2/setup-msys2@v2
+
+            - name: Install Windows dependencies
+              shell: msys2 {0}
+              run: |
+                  pacman -S --noconfirm git mingw-w64-x86_64-gcc mingw-w64-x86_64-SDL2 mingw-w64-x86_64-go
+                  export GOROOT=/mingw64/lib/go
+                  export GOPATH=/mingw64
+
+            - name: Install Go dependencies
+              shell: msys2 {0}
+              run: |
+                  export GOROOT=/mingw64/lib/go
+                  export GOPATH=/mingw64
+                  go get -v
+
+            - name: Build
+              shell: msys2 {0}
+              run: |
+                  export GOROOT=/mingw64/lib/go
+                  export GOPATH=/mingw64
+                  CGO_ENABLED=1 GOOS=windows GOARCH=amd64 go build -v -tags static -ldflags "-s -w -H=windowsgui"
+
+            - name: Upload artifact
+              uses: actions/upload-artifact@v2
+              with:
+                  name: installer-windows
+                  path: install-neptune.exe
+
+    release:
+        runs-on: ubuntu-latest
+        needs: [build-linux, build-mac, build-windows]
+
+        steps:
+            - name: Checkout code
+              uses: actions/checkout@v2
+
+            - uses: actions/download-artifact@v2
+              with:
+                  name: installer-linux
+                  path: linux
+
+            - uses: actions/download-artifact@v2
+              with:
+                  name: installer-macos
+                  path: macos
+
+            - uses: actions/download-artifact@v2
+              with:
+                  name: installer-windows
+                  path: windows
+
+            - name: Get some values needed for the release
+              id: release_values
+              run: |
+                  echo "::set-output name=date::$(date '+%Y-%m-%d')"
+                  echo "::set-output name=tag::${GITHUB_REF#refs/tags/}"
+
+            - name: Create the release
+              uses: softprops/action-gh-release@v1
+              env:
+                  GITHUB_TOKEN: ${{ secrets.LINK_TOKEN }}
+              with:
+                  name: ${{ steps.release_values.outputs.tag }}, ${{ steps.release_values.outputs.date }}
+                  draft: true
+                  prerelease: false
+                  body_path: .github/release_body_template.md
+                  files: |
+                      linux/install-neptune
+                      macos/Install neptune.dmg
+                      windows/install-neptune.exe
