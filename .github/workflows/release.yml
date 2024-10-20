@@ -24,7 +24,7 @@ jobs:
             - name: Install Linux dependencies # No idea if this works.
               run: |
                   sudo apt update
-                  sudo apt install -y gtk+-3.0 xorg-dev
+                  sudo apt install -y build-essential libgtk-3-dev xorg-dev
 
             - name: Install Go dependencies
               run: go get -v
