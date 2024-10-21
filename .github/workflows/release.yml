@@ -71,7 +71,7 @@ jobs:
 
             - name: Create .app folder
               run: |
-                go run fyne.io/fyne/v2/cmd/fyne@latest -- package -os darwin -icon assets/mac-icon.icns -name "Install neptune"
+                go run fyne.io/fyne/v2/cmd/fyne@latest -- package -os darwin -use-raw-icon -icon assets/mac-icon.icns -name "Install neptune"
 
             - name: Create DMG folder
               run: |
