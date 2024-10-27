@@ -73,6 +73,11 @@ jobs:
               run: |
                 go run fyne.io/fyne/v2/cmd/fyne@latest -- package -os darwin -use-raw-icon -icon assets/mac-icon.icns -name "Install neptune"
 
+            - name: Move to .app folder
+              run: |
+                rm Install\ neptune.app/Contents/MacOS/neptune-installer
+                mv neptune-installer Install\ neptune.app/Contents/MacOS/neptune-installer
+                
             - name: Create DMG folder
               run: |
                 mkdir -p neptune-installer-dir
