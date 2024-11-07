@@ -164,9 +164,9 @@ func main() {
 		injectorPath := filepath.Join(neptuneDir, "injector")
 
 		if err := CopyDir(injectorPath, filepath.Join(selectedInstancePath[0], "app")); err != nil {
-    dialog.Message("Failed to copy injector to app directory!\n%s", err).Error()
-    a.Quit()
-}
+    			dialog.Message("Failed to copy injector to app directory!\n%s", err).Error()
+    			a.Quit()
+		}
 
 		// It's fine if this fails, it's in the temp dir.
 		os.Remove(neptuneDir)
