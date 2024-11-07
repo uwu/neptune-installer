@@ -17,6 +17,56 @@ import (
 	"github.com/sqweek/dialog"
 )
 
+func CopyFile(src string, dst string) error {
+    srcFile, err := os.Open(src)
+    if err != nil {
+        return err
+    }
+    defer srcFile.Close()
+
+    dstFile, err := os.Create(dst)
+    if err != nil {
+        return err
+    }
+    defer dstFile.Close()
+
+    _, err = io.Copy(dstFile, srcFile)
+    return err
+}
+
+func CopyDir(src string, dst string) error {
+    srcInfo, err := os.Stat(src)
+    if err != nil {
+        return err
+    }
+
+    // Handle directory permissions
+    if err := os.MkdirAll(dst, srcInfo.Mode()); err != nil {
+        return err
+    }
+
+    entries, err := os.ReadDir(src)
+    if err != nil {
+        return err
+    }
+
+    for _, entry := range entries {
+        srcPath := filepath.Join(src, entry.Name())
+        dstPath := filepath.Join(dst, entry.Name())
+
+        if entry.IsDir() {
+            if err := CopyDir(srcPath, dstPath); err != nil {
+                return err
+            }
+        } else {
+            if err := CopyFile(srcPath, dstPath); err != nil {
+                return err
+            }
+        }
+    }
+    return nil
+}
+
 func main() {
 	user, err := user.Current()
 
@@ -113,9 +163,9 @@ func main() {
 		neptuneDir := filepath.Join(tempDirectory, "neptune-master")
 		injectorPath := filepath.Join(neptuneDir, "injector")
 
-		if err := os.Rename(injectorPath, filepath.Join(selectedInstancePath[0], "app")); err != nil {
-			dialog.Message("Failed to move injector to app directory!\n%s", err).Error()
-			a.Quit()
+		if err := CopyDir(injectorPath, filepath.Join(selectedInstancePath[0], "app")); err != nil {
+    			dialog.Message("Failed to copy injector to app directory!\n%s", err).Error()
+    			a.Quit()
 		}
 
 		// It's fine if this fails, it's in the temp dir.
